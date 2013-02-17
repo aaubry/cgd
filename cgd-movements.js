@@ -1,7 +1,7 @@
 var util = require("util");
 var api = require("./cgd-api");
 
-exports.exportLatestMovements = function(iaccountNumber, password) {
+exports.exportLatestMovements = function(accountNumber, password) {
 	api.login(accountNumber, password, function(cookie, response) {
 		api.getAccountDetails(cookie, response.lcnt[0].key, function(response) {
 			util.puts(util.format("Account balance: %d", response.slds.sdse / 100));
@@ -16,6 +16,13 @@ exports.exportLatestMovements = function(iaccountNumber, password) {
 			});
 
 			util.puts(util.format("Movement count: %d", response.lmov.length));
+		});
+	});
+}
+
+exports.exportMovements = function(accountNumber, password, startDate, endDate) {
+	api.login(accountNumber, password, function(cookie, response) {
+		api.getAccountMovements(cookie, response.lcnt[0].key, startDate, endDate, function(page) {
 		});
 	});
 }

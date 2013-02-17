@@ -1,5 +1,19 @@
+var querystring = require("querystring");
+var util = require("util");
 var client = require("https");
 var debugClient = require("http");
+
+function formatDate(date) {
+	var year = date.getFullYear();
+	var month = (date.getMonth() + 1);
+	var day = date.getDate();
+	return util.format(
+		"%d-%s-%s",
+		year,
+		month < 10 ? "0" + month : month,
+		day < 10 ? "0" + day : day
+	);
+}
 
 function createOptions(method, path, cookie, debugMode) {
 	var options = {
@@ -25,7 +39,14 @@ function createOptions(method, path, cookie, debugMode) {
 	return options;
 }
 
-function performRequest(options, processResponse, debugMode) {
+function performRequest(options, processResponse, postData, debugMode) {
+	var dataString;
+	if(postData) {
+		dataString = JSON.stringify(postData);
+		options.headers["Content-Type"] = "Content-Type: application/json; charset=utf-8";
+		options.headers["Content-Length"] = postData.length;
+	}
+
 	var req = (debugMode ? debugClient : client).request(options, function(res) {
 		if(res.statusCode != 200) {
 			console.error("Received error status code: " + res.statusCode);
@@ -36,6 +57,10 @@ function performRequest(options, processResponse, debugMode) {
 			processResponse(JSON.parse(d), res.headers);
 		});
 	});
+
+	if(postData) {
+		req.write(dataString);
+	}
 
 	req.end();
 
@@ -67,5 +92,24 @@ exports.getAccountDetails = function(cookie, accountKey, onComplete) {
 	console.log("Performing get account details request");
 	performRequest(options, onComplete);
 }
+
+exports.getAccountMovements = function(cookie, accountKey, startDate, endDate, onPageReceived) {
+	var data = {
+		cnt: accountKey,
+		dti: formatDate(startDate),
+		dtf: formatDate(endDate),
+		pkl: null
+	};
+
+	var options = createOptions("POST", "/apps/r/cnt/dc/m", cookie);
+
+	var processResponse = function(page) {
+		console.log(page);
+	};
+
+	console.log("Performing get movements request");
+	performRequest(options, processResponse, data);
+}
+
 
 
