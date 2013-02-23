@@ -42,8 +42,9 @@ function displayMovements(movements) {
 
 exports.listAccounts = function(accountNumber, password) {
 	api.login(accountNumber, password, function(cookie, response) {
-		var accounts = response.lcnt.map(function(e, i) { return { number: i, key: e.key, description: e.des }; });
-		console.log(accounts);
+		response.lcnt.forEach(function(e, i) {
+			console.log(util.format("%d\t%s\t%s", i, e.key, e.des));
+		});
 	});
 }
 
